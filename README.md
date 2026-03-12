@@ -113,12 +113,14 @@ npm run dev
 ## Verification Tasks
 
 ### 1. RBAC Implementation Design
+
 **Question:** How would you implement Role-Based Access Control (RBAC) if we added "Admins" and "Read-Only" users?
 
-**Answer:** 
+**Answer:**
 We would extend the `User` model with a `role` field and include it in the JWT. An `authorize` middleware would then gate routes (e.g., `router.delete('/tickets/:id', authenticate, authorize(['admin']))`). The frontend would conditionally render elements like "Delete" buttons based on the decoded role from the `triage_session` cookie.
 
 ### 2. LLM API Failure Design
+
 **Question:** What happens if the LLM API goes down? How is the API designed to handle this?
 
 **Answer:**
@@ -126,7 +128,7 @@ The `analyzeTicket` service uses a `try...catch` block around the Gemini AI call
 
 ## AI Integration
 
-The system uses Claude API for intelligent ticket triage:
+The system uses gemini API for intelligent ticket triage:
 
 1. **Categorization**: Automatically assigns ticket categories based on content
 2. **Priority Assignment**: Determines priority level from description and context
@@ -154,7 +156,7 @@ npm test
 # Frontend tests
 cd frontend
 npm test
-````
+```
 
 **Test Coverage Target**: 80% on core business logic (ticket creation, AI parsing, authentication)
 

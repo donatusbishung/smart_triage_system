@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, Mail, User, CalendarDays } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 interface TicketDetailDialogProps {
   ticket: Ticket | null;
@@ -47,16 +48,6 @@ export default function TicketDetailDialog({
   priorityColors,
 }: TicketDetailDialogProps) {
   if (!ticket) return null;
-
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -89,7 +80,6 @@ export default function TicketDetailDialog({
 
         <Separator />
 
-        {/* Meta info */}
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <User className="w-4 h-4 shrink-0" />
@@ -101,7 +91,16 @@ export default function TicketDetailDialog({
           </div>
           <div className="flex items-center gap-2 text-muted-foreground col-span-2">
             <CalendarDays className="w-4 h-4 shrink-0" />
-            <span>{formatDate(ticket.createdAt)}</span>
+            <span>
+              {formatDate(ticket.createdAt, {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
           </div>
         </div>
 

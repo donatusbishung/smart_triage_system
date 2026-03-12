@@ -1,19 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { apiPost } from "@/lib/fetchService";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -22,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TicketPriority, PRIORITY_LABELS } from "@/lib/types";
-import { Send, ShieldCheck, Zap, Clock } from "lucide-react";
+import { Send, ShieldCheck, Clock } from "lucide-react";
 
 export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,29 +35,11 @@ export default function Home() {
     };
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-      const res = await fetch(`${API_URL}/api/tickets`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const responseData = await res.json();
-
-      if (!res.ok) {
-        throw new Error(responseData.error || "Failed to submit ticket");
-      }
+      await apiPost<{ ticket: any }>("/api/tickets", data, { skipAuth: true });
 
       setSubmitted(true);
-      toast.success("Ticket submitted successfully!", {
-        description: `Auto-assigned to ${responseData.ticket.category} (${PRIORITY_LABELS[responseData.ticket.priority as TicketPriority] || responseData.ticket.priority} priority).`,
-      });
+      toast.success("Ticket submitted successfully!");
 
-      // Reset form after brief pause
-      setTimeout(() => {
-        setSubmitted(false);
-        (e.target as HTMLFormElement).reset();
-      }, 3000);
     } catch (err: any) {
       toast.error("Submission failed", {
         description: err.message || "Please try again later.",
@@ -76,7 +52,6 @@ export default function Home() {
   return (
     <div className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center p-4 sm:p-8 selection:bg-brand-500 selection:text-white">
 
-      {/* Top nav link */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-white border-b border-white/10">
         <div className="flex items-center gap-2">
           <span className="font-bold text-lg tracking-tight">

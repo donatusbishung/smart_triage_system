@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import {  LogIn, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { setAuthToken } from "@/lib/fetchService";
 import { toast } from "sonner";
 
 export default function LoginPage() {
@@ -29,8 +30,7 @@ export default function LoginPage() {
     const password = formData.get("password");
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-      const res = await fetch(`${API_URL}/api/auth/login`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -42,12 +42,9 @@ export default function LoginPage() {
         throw new Error(data.error || "Login failed");
       }
 
-      // Set session cookie
-      document.cookie = `triage_session=${data.token}; path=/; max-age=86400`;
+      setAuthToken(data.token);
 
-      toast.success("Login successful!", {
-        description: "Redirecting to dashboard…",
-      });
+      toast.success("Login successful!");
 
       setTimeout(() => {
         router.push("/dashboard");

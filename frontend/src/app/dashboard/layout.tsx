@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { useEffect, useState } from "react";
 import { LogOut, LayoutDashboard } from "lucide-react";
+import { getAuthToken } from "@/lib/fetchService";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +15,19 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        setUser({ name: payload.name, email: payload.email });
+      } catch (e) {
+        console.error("Failed to parse token payload", e);
+      }
+    }
+  }, []);
 
   const handleLogout = () => {
     document.cookie = "triage_session=; path=/; max-age=0";
@@ -41,14 +56,14 @@ export default function DashboardLayout({
           {/* Right: user + logout */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex flex-col items-end mr-1">
-              <span className="text-sm font-medium">Agent Smith</span>
+              <span className="text-sm font-medium">{user?.name || "Support Agent"}</span>
               <span className="text-xs text-muted-foreground">
-                agent@smarttriage.com
+                {user?.email || "agent@smarttriage.com"}
               </span>
             </div>
             <Avatar className="h-9 w-9 border-2 border-brand-500/20">
-              <AvatarFallback className="bg-brand-500/10 text-brand-600 text-sm font-bold">
-                AS
+              <AvatarFallback className="bg-brand-500/10 text-brand-600 text-sm font-bold uppercase">
+                {user?.name ? user.name.charAt(0) : "A"}
               </AvatarFallback>
             </Avatar>
             <Button

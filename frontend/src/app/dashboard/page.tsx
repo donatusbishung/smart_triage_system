@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import {
   Ticket,
   TicketStatus,
@@ -33,7 +34,11 @@ import {
   CheckCircle2,
   XCircle,
   Inbox,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { apiGet, apiPatch } from "@/lib/fetchService";
+import { formatDate } from "@/lib/utils";
 import TicketDetailDialog from "@/components/TicketDetailDialog";
 
 const statusConfig: Record<
@@ -76,9 +81,13 @@ export default function DashboardPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     try {
+      setIsLoading(true);
       const session = document.cookie
         .split("; ")
         .find((row) => row.startsWith("triage_session="))
@@ -89,43 +98,34 @@ export default function DashboardPage() {
         return;
       }
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-      const res = await fetch(`${API_URL}/api/tickets`, {
-        headers: {
-          Authorization: `Bearer ${session}`,
-        },
-      });
-
-      if (!res.ok) {
-        if (res.status === 401) {
-          router.push("/login");
-        }
-        throw new Error("Failed to fetch tickets");
-      }
-
-      const data = await res.json();
+      const data = await apiGet<{ tickets: any[], totalPages: number, total: number }>(`/api/tickets?page=${page}&limit=10`);
       
-      // Map backend fields to frontend types (e.g. backend returns _id, ticketId, title, customer_name, customer_email)
       const mappedTickets = data.tickets.map((t: any) => ({
         ...t,
-        id: t.ticketId || t._id, // Use virtual short ID if available
+        id: t.ticketId || t._id,
         name: t.customer_name,
         email: t.customer_email,
         subject: t.title,
       }));
       
       setTickets(mappedTickets);
-    } catch (err) {
+      setTotalPages(data.totalPages || 1);
+      setTotalCount(data.total || 0);
+    } catch (err: any) {
       console.error(err);
-      toast.error("Failed to load tickets");
+      if (err.status === 401) {
+        router.push("/login");
+      } else {
+        toast.error("Failed to load tickets");
+      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, router]);
 
   useEffect(() => {
     fetchTickets();
-  }, []);
+  }, [fetchTickets]);
 
   const handleStatusChange = useCallback(
     async (ticketId: string, newStatus: TicketStatus, mongoId: string) => {
@@ -137,22 +137,7 @@ export default function DashboardPage() {
       );
       
       try {
-        const session = document.cookie
-          .split("; ")
-          .find((row) => row.startsWith("triage_session="))
-          ?.split("=")[1];
-
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-        const res = await fetch(`${API_URL}/api/tickets/${mongoId}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session}`,
-          },
-          body: JSON.stringify({ status: newStatus }),
-        });
-        
-        if (!res.ok) throw new Error("Failed to update status");
+        await apiPatch(`/api/tickets/${mongoId}`, { status: newStatus });
         
         toast.success(`Ticket ${ticketId} updated`, {
           description: `Status changed to ${STATUS_LABELS[newStatus]}`,
@@ -167,21 +152,20 @@ export default function DashboardPage() {
     []
   );
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  // Stats
+  // Stats (Using totalCount for total dashboard tickets indicator)
   const stats = STATUS_ORDER.map((s) => ({
     status: s,
     count: tickets.filter((t) => t.status === s).length,
     ...statusConfig[s],
   }));
+
+  const handlePreviousPage = () => {
+    if (page > 1) setPage(page - 1);
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages) setPage(page + 1);
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -191,7 +175,7 @@ export default function DashboardPage() {
           Ticket <span className="text-black">Dashboard</span>
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {tickets.length} total tickets
+          {totalCount} total tickets
         </p>
       </div>
 
@@ -310,6 +294,36 @@ export default function DashboardPage() {
               ))}
             </TableBody>
           </Table>
+
+          {/* Pagination Controls */}
+          {totalCount > 0 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <div className="text-sm text-muted-foreground">
+                Showing page <span className="font-medium">{page}</span> of{" "}
+                <span className="font-medium">{totalPages}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviousPage}
+                  disabled={page <= 1 || isLoading}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={page >= totalPages || isLoading}
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

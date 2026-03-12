@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Zap, LogIn, ArrowLeft } from "lucide-react";
+import {  LogIn, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -82,7 +82,6 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 placeholder="agent@smarttriage.com"
-                defaultValue="agent@smarttriage.com"
                 required
                 className="bg-background/50 h-11"
               />
@@ -95,7 +94,6 @@ export default function LoginPage() {
                 name="password"
                 type="password"
                 placeholder="••••••••"
-                defaultValue="password"
                 required
                 className="bg-background/50 h-11"
               />

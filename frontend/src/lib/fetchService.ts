@@ -15,12 +15,6 @@ interface FetchOptions extends Omit<RequestInit, "body"> {
   skipAuth?: boolean;
 }
 
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
-
 async function fetchService<T>(
   endpoint: string,
   options: FetchOptions = {},

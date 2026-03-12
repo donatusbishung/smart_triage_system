@@ -15,7 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TicketPriority, PRIORITY_LABELS } from "@/lib/types";
 import { Send, ShieldCheck, Clock } from "lucide-react";
 
 export default function Home() {

@@ -21,9 +21,9 @@ const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017/mydb";
 
 mongoose
   .connect(mongoUri)
-  .then(() => console.log("✅ MongoDB connected"))
+  .then(() => console.log("MongoDB connected"))
   .catch((err) => {
-    console.error("❌ MongoDB connection error:", err);
+    console.error("MongoDB connection error:", err);
     process.exit(1);
   });
 
@@ -46,4 +46,4 @@ app.use((err, req, res, next) => {
 
 // --------------- Start Server ---------------
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
